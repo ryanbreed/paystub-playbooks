@@ -1,0 +1,51 @@
+- hosts: all
+  name: paystub-sinatra
+  vars:
+    paystub_repo: https://github.com/ryanbreed/paystub-sinatra
+    paystub_path: /app/ruby/paystub-sinatra
+    paystub_user: app-ruby
+    paystub_group: app-ruby
+    paystub_user_home: /app/ruby
+    paystub_ruby: /app/ruby/runtime/bin/ruby
+  tasks:
+    - name: install base audit rules
+      copy: src=dist/rules.d/ dest=/etc/audit/rules.d/ owner=root group=root
+      notify:
+        - reload rules
+
+    - name: configure runtime audit rules
+      template: src=templates/50-runtime-ruby.rules.j2 dest=/etc/audit/rules.d/50-runtime-ruby.rules owner=root group=root
+      notify:
+        - reload rules
+
+    - name: install packages
+      yum: name={{item}} state=installed
+      with_items:
+       - strace
+       - git
+       - lsof
+
+    - name: app runtime user
+      user: name={{paystub_user}} shell=/bin/bash state=present skeleton=yes home={{paystub_user_home}} uid=8000
+
+    - name: fixup app home
+      file: path={{paystub_user_home}} owner={{paystub_user}} group={{paystub_group}} state=directory mode=0755
+
+    - name: install app
+      git: repo={{paystub_repo}} dest={{paystub_path}} clone=yes update=yes
+
+    - name: install bundle
+      bundler: state=present path=vendor/bundle clean=True chdir={{paystub_path}}
+
+    - name: fixup app directory
+      file: path={{item}} owner={{paystub_user}} group={{paystub_group}} state=directory
+      with_items:
+        - "{{paystub_home}}/tmp"
+
+  handlers:
+    - name: reload rules
+      command: augenrules --load
+      notify:
+        - restart rsyslog
+    - name: restart rsyslog
+      systemd: service=rsyslog state=restarted
