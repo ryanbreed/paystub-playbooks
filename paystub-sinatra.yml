@@ -7,6 +7,7 @@
     paystub_group: app-ruby
     paystub_user_home: /app/ruby
     paystub_ruby: /app/ruby/runtime/bin/ruby
+    paystub_bundle: /app/ruby/runtime/bin/bundle
   tasks:
     - name: install base audit rules
       copy: src=dist/rules.d/ dest=/etc/audit/rules.d/ owner=root group=root
@@ -35,12 +36,12 @@
       git: repo={{paystub_repo}} dest={{paystub_path}} clone=yes update=yes
 
     - name: install bundle
-      bundler: state=present path=vendor/bundle clean=True chdir={{paystub_path}}
+      bundler: state=present gem_path=vendor/bundle clean=True chdir={{paystub_path}} executable={{paystub_bundle}}
 
     - name: fixup app directory
       file: path={{item}} owner={{paystub_user}} group={{paystub_group}} state=directory
       with_items:
-        - "{{paystub_home}}/tmp"
+        - "{{paystub_path}}/tmp"
 
   handlers:
     - name: reload rules
