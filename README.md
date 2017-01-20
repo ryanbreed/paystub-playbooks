@@ -1,3 +1,5 @@
 # paystub-playbooks
 
-playbooks for deploying paystub apps and audit configs
+Playbooks for deploying paystub apps and audit configs.
+
+You do not want to use these configs in production.
