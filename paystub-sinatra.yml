@@ -5,9 +5,9 @@
     paystub_path: /app/ruby/paystub-sinatra
     paystub_user: app-ruby
     paystub_group: app-ruby
-    paystub_user_home: /app/ruby
-    paystub_ruby: /app/ruby/runtime/bin/ruby
-    paystub_bundle: /app/ruby/runtime/bin/bundle
+    paystub_user_home: /app/ruby/home
+    paystub_ruby:   /app/ruby/2.3.3/bin/ruby
+    paystub_bundle: /app/ruby/2.3.3/bin/bundle
   tasks:
     - name: install base audit rules
       copy: src=dist/rules.d/ dest=/etc/audit/rules.d/ owner=root group=root
@@ -25,12 +25,7 @@
        - strace
        - git
        - lsof
-
-    - name: app runtime user
-      user: name={{paystub_user}} shell=/bin/bash state=present skeleton=yes home={{paystub_user_home}} uid=8000
-
-    - name: fixup app home
-      file: path={{paystub_user_home}} owner={{paystub_user}} group={{paystub_group}} state=directory mode=0755
+       - libffi-devel
 
     - name: install app
       git: repo={{paystub_repo}} dest={{paystub_path}} clone=yes update=yes
